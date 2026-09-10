@@ -1,0 +1,44 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  createdAt     DateTime  @default(now())
+  devices       Device[]
+  sessions      Session[]
+}
+
+model Device {
+  id            String    @id @default(uuid())
+  name          String    // e.g., "Fatih's Windows PC"
+  deviceKey     String    @unique // The cryptographic key given to the Desktop Agent
+  status        String    @default("offline") // online, offline
+  lastSeen      DateTime?
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+}
+
+model Session {
+  id            String    @id @default(uuid())
+  sessionToken  String    @unique
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires       DateTime
+}
+
+model PairingCode {
+  id            String    @id @default(uuid())
+  code          String    @unique // Short 6-digit code for UI pairing
+  userId        String
+  expiresAt     DateTime  // Expires in 15 minutes
+  createdAt     DateTime  @default(now())
+}
